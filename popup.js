@@ -1,3 +1,5 @@
+import { encrypt, decrypt } from './crypto.js';
+
 document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("password-input");
   const strengthFeedback = document.getElementById("strength-feedback");
@@ -72,7 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("save-local").addEventListener("click", () => {
     const password = passwordInput.value;
     if (password) {
-      chrome.storage.local.set({ savedPassword: password }, () => {
+      const encryptedPassword = encrypt(password, password); // Using password as key for simplicity
+      chrome.storage.local.set({ savedPassword: encryptedPassword }, () => {
         alert("Password saved locally!");
       });
     } else {
@@ -84,9 +87,21 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("save-cloud").addEventListener("click", () => {
     const password = passwordInput.value;
     if (password) {
+      const encryptedPassword = encrypt(password, password); // Using password as key for simplicity
       alert("Cloud saving not implemented yet. Coming soon!");
+      // Placeholder for actual cloud saving logic
     } else {
       alert("No password to save!");
+    }
+  });
+
+  // Retrieve and decrypt password from local storage
+  chrome.storage.local.get(['savedPassword'], (result) => {
+    if (result.savedPassword) {
+      const decryptedPassword = decrypt(result.savedPassword, passwordInput.value); // Using password as key for simplicity
+      passwordInput.value = decryptedPassword;
+      strengthFeedback.textContent = `Strength: ${checkPasswordStrength(decryptedPassword)}`;
+      breachFeedback.textContent = "No breaches found."; // Placeholder for actual breach check
     }
   });
 });
